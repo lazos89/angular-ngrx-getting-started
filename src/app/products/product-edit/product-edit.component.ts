@@ -1,14 +1,16 @@
-import { Component, OnInit, OnDestroy } from "@angular/core";
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnDestroy,
+  OnInit,
+  Output,
+  SimpleChanges,
+} from "@angular/core";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
-
-import { Product } from "../product";
-import { ProductService } from "../product.service";
 import { GenericValidator } from "../../shared/generic-validator";
 import { NumberValidators } from "../../shared/number.validator";
-import { Store, select } from "@ngrx/store";
-import * as fromProduct from "../state/product.reducer";
-import * as fromProductSelectors from "../state/product.selector";
-import { ProductActions } from "../state/action-types";
+import { Product } from "../product";
 
 @Component({
   selector: "app-product-edit",
@@ -17,7 +19,14 @@ import { ProductActions } from "../state/action-types";
 })
 export class ProductEditComponent implements OnInit, OnDestroy {
   pageTitle = "Product Edit";
-  errorMessage = "";
+  @Input() errorMessage: string;
+  @Input() selectedProduct: Product;
+  @Output() create = new EventEmitter<Product>();
+  @Output() update = new EventEmitter<Product>();
+  @Output() delete = new EventEmitter<Product>();
+  @Output() clearCurrent = new EventEmitter<void>();
+
+  componentActive = true;
   productForm: FormGroup;
 
   product: Product | null;
@@ -27,11 +36,7 @@ export class ProductEditComponent implements OnInit, OnDestroy {
   private validationMessages: { [key: string]: { [key: string]: string } };
   private genericValidator: GenericValidator;
 
-  constructor(
-    private fb: FormBuilder,
-    private productService: ProductService,
-    private store$: Store<fromProduct.ProductsState>
-  ) {
+  constructor(private fb: FormBuilder) {
     // Defines all of the validation messages for the form.
     // These could instead be retrieved from a file or database.
     this.validationMessages = {
@@ -69,14 +74,6 @@ export class ProductEditComponent implements OnInit, OnDestroy {
       description: "",
     });
 
-    // Watch for changes to the currently selected product
-
-    this.store$
-      .pipe(select(fromProductSelectors.selectCurrentProduct))
-      .subscribe((currentProduct) => {
-        this.displayProduct(currentProduct);
-      });
-
     // Watch for value changes
     this.productForm.valueChanges.subscribe(
       (value) =>
@@ -86,7 +83,17 @@ export class ProductEditComponent implements OnInit, OnDestroy {
     );
   }
 
-  ngOnDestroy(): void {}
+  ngOnChanges(changes: SimpleChanges): void {
+    // patch form with value from the store
+    if (changes.selectedProduct) {
+      const product: any = changes.selectedProduct.currentValue as Product;
+      this.displayProduct(product);
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.componentActive = false;
+  }
 
   // Also validate on blur
   // Helpful if the user tabs through required fields
@@ -100,7 +107,7 @@ export class ProductEditComponent implements OnInit, OnDestroy {
     // Set the local product property
     this.product = product;
 
-    if (this.product) {
+    if (this.product && this.productForm) {
       // Reset the form back to pristine
       this.productForm.reset();
 
@@ -130,24 +137,26 @@ export class ProductEditComponent implements OnInit, OnDestroy {
   deleteProduct(): void {
     if (this.product && this.product.id) {
       if (confirm(`Really delete the product: ${this.product.productName}?`)) {
-        this.store$.dispatch(
-          ProductActions.deleteProduct({ productId: this.product.id })
-        );
+        this.delete.emit(this.product);
       }
     } else {
-      this.store$.dispatch(ProductActions.clearCurrentProduct());
+      // No need to delete, it was never saved
+      this.clearCurrent.emit();
     }
   }
 
   saveProduct(): void {
     if (this.productForm.valid) {
       if (this.productForm.dirty) {
+        // Copy over all of the original product properties
+        // Then copy over the values from the form
+        // This ensures values not on the form, such as the Id, are retained
         const p = { ...this.product, ...this.productForm.value };
 
         if (p.id === 0) {
-          this.store$.dispatch(ProductActions.createProduct({ product: p }));
+          this.create.emit(p);
         } else {
-          this.store$.dispatch(ProductActions.updateProduct({ product: p }));
+          this.update.emit(p);
         }
       }
     } else {
