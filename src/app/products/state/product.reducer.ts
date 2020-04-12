@@ -10,14 +10,14 @@ export interface State extends fromRoot.AppState {
 }
 export interface ProductsState {
   showProductsCode: boolean;
-  currentProduct: Product;
+  currentProductId: number | null;
   allProducts: Product[];
   error: string;
 }
 
 const initialState: ProductsState = {
   showProductsCode: false,
-  currentProduct: null,
+  currentProductId: null,
   allProducts: [],
   error: "",
 };
@@ -30,17 +30,11 @@ const productReducer = createReducer(
   })),
   on(ProductActions.setCurrentProduct, (state, action) => ({
     ...state,
-    currentProduct: action.product,
+    currentProductId: action.product.id,
   })),
   on(ProductActions.initializeCurrentProduct, (state) => ({
     ...state,
-    currentProduct: {
-      id: 0,
-      productName: "",
-      productCode: "New",
-      description: "",
-      starRating: 0,
-    },
+    currentProductId: 0,
   })),
   on(ProductActions.loadSuccess, (state, action) => ({
     ...state,
