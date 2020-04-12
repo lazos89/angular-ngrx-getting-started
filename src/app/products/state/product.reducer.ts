@@ -44,6 +44,47 @@ const productReducer = createReducer(
   on(ProductActions.loadFail, (state, action) => ({
     ...state,
     error: action.error,
+  })),
+  on(ProductActions.updateProductSuccess, (state, action) => {
+    const updatedProducts = state.allProducts.map((item) =>
+      action.product.id === item.id ? action.product : item
+    );
+    return {
+      ...state,
+      error: "",
+      allProducts: updatedProducts,
+      currentProductId: action.product.id,
+    };
+  }),
+  on(ProductActions.updateProductFail, (state, action) => ({
+    ...state,
+    error: action.error,
+  })),
+  on(ProductActions.createProductSuccess, (state, action) => {
+    return {
+      ...state,
+      error: "",
+      allProducts: [...state.allProducts, action.product],
+      currentProductId: action.product.id,
+    };
+  }),
+  on(ProductActions.createProductFail, (state, action) => ({
+    ...state,
+    error: action.error,
+  })),
+  on(ProductActions.deleteProductSuccess, (state, action) => {
+    return {
+      ...state,
+      error: "",
+      allProducts: state.allProducts.filter(
+        (product) => product.id !== action.productId
+      ),
+      currentProductId: null,
+    };
+  }),
+  on(ProductActions.updateProductFail, (state, action) => ({
+    ...state,
+    error: action.error,
   }))
 );
 

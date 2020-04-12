@@ -130,14 +130,11 @@ export class ProductEditComponent implements OnInit, OnDestroy {
   deleteProduct(): void {
     if (this.product && this.product.id) {
       if (confirm(`Really delete the product: ${this.product.productName}?`)) {
-        this.productService.deleteProduct(this.product.id).subscribe({
-          next: () =>
-            this.store$.dispatch(ProductActions.clearCurrentProduct()),
-          error: (err) => (this.errorMessage = err.error),
-        });
+        this.store$.dispatch(
+          ProductActions.deleteProduct({ productId: this.product.id })
+        );
       }
     } else {
-      // No need to delete, it was never saved
       this.store$.dispatch(ProductActions.clearCurrentProduct());
     }
   }
@@ -145,27 +142,12 @@ export class ProductEditComponent implements OnInit, OnDestroy {
   saveProduct(): void {
     if (this.productForm.valid) {
       if (this.productForm.dirty) {
-        // Copy over all of the original product properties
-        // Then copy over the values from the form
-        // This ensures values not on the form, such as the Id, are retained
         const p = { ...this.product, ...this.productForm.value };
 
         if (p.id === 0) {
-          this.productService.createProduct(p).subscribe({
-            next: (product) =>
-              this.store$.dispatch(
-                ProductActions.setCurrentProduct({ product })
-              ),
-            error: (err) => (this.errorMessage = err.error),
-          });
+          this.store$.dispatch(ProductActions.createProduct({ product: p }));
         } else {
-          this.productService.updateProduct(p).subscribe({
-            next: (product) =>
-              this.store$.dispatch(
-                ProductActions.setCurrentProduct({ product })
-              ),
-            error: (err) => (this.errorMessage = err.error),
-          });
+          this.store$.dispatch(ProductActions.updateProduct({ product: p }));
         }
       }
     } else {
