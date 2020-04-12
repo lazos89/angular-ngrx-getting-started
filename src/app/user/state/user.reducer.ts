@@ -23,7 +23,5 @@ const productReducer = createReducer(
 );
 
 export function reducer(state = initialState, action: Action) {
-  console.log(state);
-
   return productReducer(state, action);
 }

@@ -1,13 +1,11 @@
-import { Component, OnInit, OnDestroy } from "@angular/core";
-
-import { Subscription } from "rxjs";
-
+import { Component, OnDestroy, OnInit } from "@angular/core";
+import { select, Store } from "@ngrx/store";
+import { Observable } from "rxjs";
 import { Product } from "../product";
-import { ProductService } from "../product.service";
-import { Store, select } from "@ngrx/store";
 import { ProductActions } from "../state/action-types";
-import * as fromProductSelectors from "../state/product.selector";
 import * as fromProduct from "../state/product.reducer";
+import * as fromProductSelectors from "../state/product.selector";
+import { getError, getProducts } from "../state/product.selector";
 
 @Component({
   selector: "app-product-list",
@@ -16,35 +14,26 @@ import * as fromProduct from "../state/product.reducer";
 })
 export class ProductListComponent implements OnInit, OnDestroy {
   pageTitle = "Products";
-  errorMessage: string;
-
   displayCode: boolean;
-
-  products: Product[];
 
   // Used to highlight the selected product in the list
   selectedProduct: Product | null;
-  // sub: Subscription;
+  products$: Observable<Product[]>;
+  errorMessage$: Observable<string>;
 
-  constructor(
-    private productService: ProductService,
-    private store$: Store<fromProduct.ProductsState>
-  ) {}
+  constructor(private store$: Store<fromProduct.ProductsState>) {}
 
   ngOnInit(): void {
-    // this.sub = this.productService.selectedProductChanges$.subscribe(
-    //   (selectedProduct) => (this.selectedProduct = selectedProduct)
-    // );
+    this.errorMessage$ = this.store$.pipe(select(getError));
     this.store$
       .pipe(select(fromProductSelectors.selectShowProductsCode))
       .subscribe((showProductsCode) => (this.displayCode = showProductsCode));
     this.store$
       .pipe(select(fromProductSelectors.selectCurrentProduct))
       .subscribe((currentProduct) => (this.selectedProduct = currentProduct));
-    this.productService.getProducts().subscribe({
-      next: (products: Product[]) => (this.products = products),
-      error: (err: any) => (this.errorMessage = err.error),
-    });
+
+    this.store$.dispatch(ProductActions.load());
+    this.products$ = this.store$.pipe(select(getProducts));
   }
 
   ngOnDestroy(): void {

@@ -12,12 +12,14 @@ export interface ProductsState {
   showProductsCode: boolean;
   currentProduct: Product;
   allProducts: Product[];
+  error: string;
 }
 
 const initialState: ProductsState = {
   showProductsCode: false,
   currentProduct: null,
   allProducts: [],
+  error: "",
 };
 
 const productReducer = createReducer(
@@ -43,7 +45,7 @@ const productReducer = createReducer(
   on(ProductActions.loadSuccess, (state, action) => ({
     ...state,
     error: "",
-    products: action.products,
+    allProducts: action.products,
   })),
   on(ProductActions.loadFail, (state, action) => ({
     ...state,

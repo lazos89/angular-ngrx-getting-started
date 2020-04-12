@@ -9,6 +9,11 @@ export const selectShowProductsCode = createSelector(
   getProductsFeatureState,
   (state) => state.showProductsCode
 );
+
+export const getProducts = createSelector(
+  getProductsFeatureState,
+  (state) => state.allProducts
+);
 // export const selectCurrentProductId = createSelector(
 //   getProductsFeatureState,
 //   (state) => state.currentProduct.id
@@ -19,6 +24,11 @@ export const selectShowProductsCode = createSelector(
 //   (state, currentProductId) =>
 //     state.allProducts.find((p) => p.id === currentProductId)
 // );
+
+export const getError = createSelector(
+  getProductsFeatureState,
+  (state) => state.error
+);
 
 export const selectCurrentProduct = createSelector(
   getProductsFeatureState,
