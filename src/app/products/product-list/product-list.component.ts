@@ -6,7 +6,7 @@ import { Product } from "../product";
 import { ProductService } from "../product.service";
 import { Store, select } from "@ngrx/store";
 import { ProductActions } from "../state/action-types";
-
+import * as fromProductSelectors from "../state/product.selector";
 @Component({
   selector: "app-product-list",
   templateUrl: "./product-list.component.html",
@@ -26,19 +26,16 @@ export class ProductListComponent implements OnInit, OnDestroy {
 
   constructor(
     private productService: ProductService,
-    private store: Store<any>
+    private store$: Store<any>
   ) {}
 
   ngOnInit(): void {
     this.sub = this.productService.selectedProductChanges$.subscribe(
       (selectedProduct) => (this.selectedProduct = selectedProduct)
     );
-    this.store.pipe(select("products")).subscribe((products) => {
-      console.log(products);
-      if (products) {
-        this.displayCode = products.showProductsCode;
-      }
-    });
+    this.store$
+      .pipe(select(fromProductSelectors.selectShowProductsCode))
+      .subscribe((showProductsCode) => (this.displayCode = showProductsCode));
     this.productService.getProducts().subscribe({
       next: (products: Product[]) => (this.products = products),
       error: (err: any) => (this.errorMessage = err.error),
@@ -51,7 +48,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
 
   checkChanged(value: boolean): void {
     // this.displayCode = value;
-    this.store.dispatch(
+    this.store$.dispatch(
       ProductActions.showProductsCode({ showProductsCode: value })
     );
   }

@@ -27,7 +27,13 @@ import { environment } from "../environments/environment";
     HttpClientInMemoryWebApiModule.forRoot(ProductData),
     StoreModule.forRoot({}),
     EffectsModule.forRoot([]),
-    environment.production ? [] : StoreDevtoolsModule.instrument(),
+    environment.production
+      ? []
+      : StoreDevtoolsModule.instrument({
+          name: "Angular NGRX Getting Started",
+          maxAge: 25,
+          logOnly: environment.production,
+        }),
     UserModule,
     AppRoutingModule,
   ],
